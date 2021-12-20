@@ -1,9 +1,10 @@
+#' sa_covid_cases.R
+#' 
+#' Ben Moretti
+#' 
+#' 19 Dec 2021
 #'
-#'
-#'
-#'
-#'
-#'
+#' grabs data from covid19nearme and plots for south australia
 #'
 
 # libraries ------------------------------------
@@ -72,6 +73,7 @@ sa_cases_plot <- sa_data_tbl %>%
         y = "Metric Value",
         x = "Date"
     )
+
 
 # output ----------------------------------------------
 
