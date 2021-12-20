@@ -37,7 +37,7 @@ latest_date <- sa_data_tbl %>%
     summarise(max(date)) %>%
     pull()
 
-plot_subtitle =  str_glue("Latest Data: {latest_date}. 
+plot_subtitle =  str_glue("Latest Data: {latest_date} 
                            Sourced from https://covid19nearme.com.au/state/sa")
 
 
@@ -67,7 +67,7 @@ sa_cases_plot <- sa_data_tbl %>%
     scale_colour_tableau() + 
     theme(legend.position = "none") +
     labs(
-        title = "SA Case Data",
+        title = "COVID-19 Case Data for South Australia",
         subtitle = plot_subtitle,
         caption =  plot_footer,
         y = "Metric Value",
