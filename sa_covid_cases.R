@@ -20,13 +20,14 @@ data_url <- "https://govtstats.covid19nearme.com.au/data/all.csv"
 
 data_tbl <- read_csv(data_url)
 
-
 # conditioning ------------------------------------
 
 # only select the sa metrics and date
 sa_data_tbl <- data_tbl %>%
     clean_names() %>%
     select(date, starts_with("sa_")) 
+
+sa_data_tbl %>% glimpse()
 
 # create a standard caption footer
 plot_footer <- stringr::str_glue("Author: @morebento. Data from: https://github.com/jxeeno/aust-govt-covid19-stats Code: https://github.com/morebento/sa_covid_cases")
