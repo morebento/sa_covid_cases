@@ -13,6 +13,7 @@ library(tidyverse)
 library(janitor)
 library(scales)
 library(ggthemes)
+library(lubridate)
 
 # get the data ------------------------------------
 
@@ -74,6 +75,8 @@ sa_cases_plot <- sa_data_tbl %>%
         y = "Metric Value",
         x = "Date"
     )
+
+
 
 
 # output ----------------------------------------------
