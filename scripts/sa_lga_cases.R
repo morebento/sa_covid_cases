@@ -1,3 +1,11 @@
+#' sa_lga_cases.R
+#'
+#' ben moretti 6 jan 2022
+#'
+#' scrapes data from covid live and covid near me then does a few calcs before plotting
+#'
+
+
 
 # libraries -----------------------------------------------------------
 
@@ -11,6 +19,8 @@ library(scales)
 
 # configuration -----------------------------------------------------------
 
+# urls for data sources 
+
 lga_cases_url <- "https://covidlive.com.au/report/cases-by-lga/sa"
 
 air_lga_url <- "https://vaccinedata.covid19nearme.com.au/data/geo/air_lga.csv"
@@ -18,15 +28,18 @@ air_lga_url <- "https://vaccinedata.covid19nearme.com.au/data/geo/air_lga.csv"
 
 # gather data -----------------------------------------------------------
 
+# get the lga data 
 lga_cases_data_tbl <- lga_cases_url %>%
     read_html %>%
     html_nodes("table") %>%
     .[[2]] %>%
     html_table() 
 
+# get the aust immunisation register data 
 air_lga_tbl <- read_csv(air_lga_url) %>% 
     clean_names()
 
+# get the descriptor from from lga data set
 description_text <- lga_cases_url %>%
     read_html %>%
     html_nodes("h3") %>%
@@ -56,7 +69,7 @@ tidy_air_lga_tbl <- air_lga_tbl %>%
     slice_max(date_as_at) 
 
 
-
+# define a lookup table for translating lga names be
 lga_lookup_tbl <- tribble(
     ~covidlive, ~covidnearme, ~type,
     "Adelaide", "Adelaide (C)", "C",
@@ -69,28 +82,28 @@ lga_lookup_tbl <- tribble(
     "Berri and Barmera", "Berri and Barmera (DC)", "DC",
     "Burnside", "Burnside (C)", "C",
     "Campbelltown", "Campbelltown (C) (SA)", "C",
-    #"Ceduna", "", "",
+    "Ceduna", "", "",
     "Charles Sturt", "Charles Sturt", "C",
     "Clare and Gilbert Valleys", "Clare and Gilbert Valleys (DC)", "DC",
-    #"Cleve","", "",
-    #"Coober Pedy","", "",
+    "Cleve","", "",
+    "Coober Pedy","", "",
     "Copper Coast", "Copper Coast (DC)", "DC",
-    #"Elliston","", "",
+    "Elliston","", "",
     "Flinders Ranges", "Flinders Ranges (DC)", "DC",
-    #"Franklin Harbour","", "",
+    "Franklin Harbour","", "",
     "Gawler", "Gawler (T)", "T",
     "Goyder", "Goyder (DC)", "DC",
-    #"Grant","", "",
+    "Grant","", "",
     "Holdfast Bay", "Holdfast Bay (C)", "C",
-    #"Interstate / Overseas","", "",
-    #"Kangaroo Island","", "",
+    "Interstate / Overseas","", "",
+    "Kangaroo Island","", "",
     "Karoonda East Murray", "Karoonda East Murray (DC)", "DC",
-    #"Kimba","", "",
+    "Kimba","", "",
     "Kingston", "Kingston (DC) (SA)", "DC",
     "Light", "Light (RegC)", "RegC",
-    #"Lower Eyre Peninsula","", "",
+    "Lower Eyre Peninsula","", "",
     "Loxton Waikerie", "Loxton Waikerie (DC)", "DC",
-    #"Maralinga Tjarutja","", "",
+    "Maralinga Tjarutja","", "",
     "Marion", "Marion (C)", "C",
     "Mid Murray", "Mid Murray (DC)", "DC",
     "Mitcham", "Mitcham (C)", "C",
@@ -107,20 +120,20 @@ lga_lookup_tbl <- tribble(
     "Playford", "Playford (C)", "C",
     "Port Adelaide Enfield", "Port Adelaide Enfield (C)", "C",
     "Port Augusta", "Port Augusta (C)", "C",
-    #"Port Lincoln","", "",
+    "Port Lincoln","", "",
     "Port Pirie City and Dists", "Port Pirie City and Dists (M)", "M",
     "Prospect", "Prospect (C)", "C",
     "Renmark Paringa", "Renmark Paringa (DC)", "DC",
     "Robe", "Robe (DC)", "DC",
-    #"Roxby Downs","", "",
+    "Roxby Downs","", "",
     "Salisbury", "Salisbury (C)", "C",
-    #"Southern Mallee","", "",
-    #"Streaky Bay","", "",
+    "Southern Mallee","", "",
+    "Streaky Bay","", "",
     "Tatiara", "Tatiara (DC)", "DC",
     "Tea Tree Gully", "Tea Tree Gully (C)", "C",
     "The Coorong", "The Coorong (DC)", "DC",
-    #"Tumby Bay","", "",
-    #"Unincorporated SA","", "",
+    "Tumby Bay","", "",
+    "Unincorporated SA","", "",
     "Unley", "Unley (C)", "C",
     "Victor Harbor", "Victor Harbor (C)", "C",
     "Wakefield", "Wakefield (DC)", "DC",
@@ -128,12 +141,12 @@ lga_lookup_tbl <- tribble(
     "Wattle Range", "Wattle Range (DC)", "DC",
     "West Torrens", "West Torrens (C)", "C",
     "Whyalla", "Whyalla (C)", "C",
-    #"Wudinna","", "",
+    "Wudinna","", "",
     "Yankalilla", "Yankalilla (DC)", "DC",
     "Yorke Peninsula", "Yorke Peninsula (DC)", "DC"
     )
 
-# join together
+# join together using the lookup table
 joined_tbl <- lga_lookup_tbl %>%
     inner_join(tidy_lga_cases_data_tbl, by = c("covidlive"="lga")) %>%
     inner_join(tidy_air_lga_tbl, by = c("covidnearme"="abs_name")) %>%
@@ -142,11 +155,17 @@ joined_tbl <- lga_lookup_tbl %>%
     ) %>%
     select(-covidlive)
 
+# analysis ----------------------------------------------------------------------
 
+# calculations
 joined_tbl <- joined_tbl %>%
+    
+    # normalise cases per population 
     mutate(
         cases_popn_pct = cases / abs_erp_2019_population * 100
     )  %>%
+    
+    # reclassify lga types
     mutate(
         type_reclass = case_when(
             type == "C" ~ "Council",
@@ -160,7 +179,21 @@ joined_tbl <- joined_tbl %>%
 
 # visualise -----------------------------------------------------------------
 
-tidy_lga_cases_data_tbl %>%
+
+# define text for subtitle and caption
+subtitle_text <- str_glue("Latest data: {description_text}
+                           Data sources: 
+                          
+                           LGA Cases {lga_cases_url}
+                           AIR LGA Data {air_lga_url}")
+
+caption_text <- str_glue("Author: @morebento. Code: https://github.com/morebento/sa_covid_cases")
+
+
+
+
+# bar chart of the total cases by LGA 
+sa_active_cases_by_lga_plot <- tidy_lga_cases_data_tbl %>%
     ggplot(aes(x=reorder(lga, active), active)) +
     geom_col(aes(fill="Active Cases")) +
     coord_flip() +
@@ -171,13 +204,14 @@ tidy_lga_cases_data_tbl %>%
     ) +
     labs(
         title = "South Australian COVID-19 Active Cases by LGA",
-        subtitle = str_glue("{description_text} data from {lga_cases_url}"),
+        subtitle = subtitle_text,
+        caption = caption_text,
         x = "",
         y = "Active Cases"
     ) 
 
-
-joined_tbl %>%
+# bar chart of cases as % of pop'n
+sa_active_cases_pct_by_lga_plot <- joined_tbl %>%
     ggplot(aes(x=reorder(abs_name, cases_popn_pct), cases_popn_pct)) +
     geom_col(aes(fill="Cases as Population %")) +
     coord_flip() +
@@ -188,13 +222,15 @@ joined_tbl %>%
     ) +
     labs(
         title = "South Australian COVID-19 Cases as Population % by LGA",
-        subtitle = str_glue("{description_text} data from {lga_cases_url} and {air_lga_url}"),
+        subtitle = subtitle_text,
+        caption = caption_text,
         x = "",
         y = "Cases as Population %"
     ) 
 
 
-joined_tbl %>%
+# bubble chart of casses as % of pop'n vs vaccination rate 
+sa_total_cases_pct_pop_vs_vax_rate_plot <- joined_tbl %>%
     filter(cases_popn_pct < 4) %>%
     ggplot(aes(x=air_second_dose_pct, y=cases_popn_pct, label = abs_name, shape=type_reclass)) +
     geom_point(aes(size=cases, colour=abs_erp_2019_population)) +
@@ -203,10 +239,46 @@ joined_tbl %>%
     scale_colour_gradient_tableau(labels=comma) + # from ggthemes
     labs(
         title = "South Australian COVID-19 Infection Rate (%) vs Vaccination Second Dose (%) by Local Government Areas",
-        subtitle = str_glue("{description_text} data from {lga_cases_url} and {air_lga_url}"),
+        subtitle = subtitle_text,
+        caption = caption_text,
         x = "Second Dose %",
         y = "COVID Infection %",
         size="Cases",
         colour = "Population (2016 ABS)",
         shape = "Type"
     )
+
+
+
+# export ---------------------------------------------------------------------
+
+
+# save to disc
+ggsave(
+    sa_total_cases_pct_pop_vs_vax_rate_plot, 
+    filename = "plots/sa_total_cases_pct_pop_vs_vax_rate_plot.png", 
+    width=297, 
+    height=210, 
+    units = "mm"
+)
+
+
+# save to disc
+ggsave(
+    sa_active_cases_pct_by_lga_plot, 
+    filename = "plots/sa_active_cases_pct_by_lga_plot.png", 
+    height=297, 
+    width=210, 
+    units = "mm"
+)
+
+
+# save to disc
+ggsave(
+    sa_active_cases_by_lga_plot, 
+    filename = "plots/sa_active_cases_by_lga_plot.png", 
+    height=297, 
+    width=210, 
+    units = "mm"
+)
+

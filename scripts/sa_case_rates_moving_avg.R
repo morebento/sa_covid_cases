@@ -1,17 +1,12 @@
 #'
 #' sa_case_rates_moving_avg.R
 #'
+#' ben moretti, 3 jan 2022
+#'
 #' gathers data from covidlive and calculates moving averages 
-#'
-#'
-#' 3 jan 2022
-#'
-#' ben moretti
 #' 
 #' 
-#'
-#'
-#'
+
 
 
 
@@ -46,15 +41,19 @@ sa_cases_data_tbl <- sa_cases_url %>%
 tidy_sa_cases_data_tbl <- sa_cases_data_tbl %>% 
     clean_names() %>%
     select(-var, -net) %>%
+    # cast to date
     mutate(
         date = dmy(date)
     ) %>%
+    # remove commas and dashes
     mutate(
         new = str_remove_all(new, ","),
         cases = str_remove_all(cases, ","),
         new = str_remove_all(new, "-"),
         cases = str_remove_all(cases, "-"),
     ) %>%
+    
+    # cast to integers
     mutate(
         new = as.integer(new),
         cases = as.integer(cases)
@@ -63,6 +62,7 @@ tidy_sa_cases_data_tbl <- sa_cases_data_tbl %>%
 
 # get latest data
 latest_date <- tidy_sa_cases_data_tbl %>%
+    drop_na(new) %>%
     summarise(
         latest_date = max(date)
     ) %>%
@@ -84,7 +84,7 @@ tidy_sa_cases_data_tbl <- tidy_sa_cases_data_tbl %>%
         new_five_day_moving_avg = rolling_avg_fun(new)
     ) %>%
     
-    # calculate the naive rate of change
+    # calculate the naive rate of change ie: previous day
     mutate(
         previous_cases = lag(cases, order_by = date),
         rate_naive = cases / previous_cases
@@ -100,15 +100,15 @@ tidy_sa_cases_data_tbl <- tidy_sa_cases_data_tbl %>%
 # visualisation  ------------------------------------------------------------------- 
 
 
+# define text for subtitle and caption
 subtitle_text <- str_glue("Latest data: {latest_date}
                            Data source: {sa_cases_url}")
-
 
 caption_text <- str_glue("Author: @morebento. Code: https://github.com/morebento/sa_covid_cases")
 
 
-# rate of change plot
-tidy_sa_cases_data_tbl %>% 
+# raw cases plot
+new_covid_cases_plot <- tidy_sa_cases_data_tbl %>% 
     drop_na(new) %>%
     filter(date > "2021-08-01") %>%
     select(-previous_cases) %>%
@@ -130,9 +130,8 @@ tidy_sa_cases_data_tbl %>%
     )
 
 
-
 # rate of change plot
-tidy_sa_cases_data_tbl %>% 
+roc_covid_cases_plot <- tidy_sa_cases_data_tbl %>% 
     drop_na(new) %>%
     filter(date > "2021-08-01") %>%
     select(-previous_cases) %>%
@@ -153,5 +152,27 @@ tidy_sa_cases_data_tbl %>%
         
     )
 
+# export ---------------------------------------------------------------------
+
+
+# save to disc
+ggsave(
+    new_covid_cases_plot, 
+    filename = "plots/new_covid_cases_plot.png", 
+    width=297, 
+    height=210, 
+    units = "mm"
+)
+
+
+
+# save to disc
+ggsave(
+    roc_covid_cases_plot, 
+    filename = "plots/roc_covid_cases_plot.png", 
+    width=297, 
+    height=210, 
+    units = "mm"
+)
 
 
