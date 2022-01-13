@@ -124,7 +124,7 @@ new_covid_cases_plot <- tidy_sa_cases_data_tbl %>%
         subtitle = subtitle_text,
         colour = "Cases",
         x = "Date",
-        y = "Rate of Change",
+        y = "Cases",
         caption = caption_text
         
     )
