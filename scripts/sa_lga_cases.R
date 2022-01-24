@@ -231,7 +231,7 @@ sa_active_cases_pct_by_lga_plot <- joined_tbl %>%
 
 # bubble chart of casses as % of pop'n vs vaccination rate 
 sa_total_cases_pct_pop_vs_vax_rate_plot <- joined_tbl %>%
-    filter(cases_popn_pct < 4) %>%
+    #filter(cases_popn_pct < 4) %>%
     ggplot(aes(x=air_second_dose_pct, y=cases_popn_pct, label = abs_name, shape=type_reclass)) +
     geom_point(aes(size=cases, colour=abs_erp_2019_population)) +
     geom_label_repel(size=3) +
