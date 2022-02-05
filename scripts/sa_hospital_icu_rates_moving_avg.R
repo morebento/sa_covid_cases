@@ -104,8 +104,9 @@ tidy_sa_hospital_data_plot <- tidy_sa_hospital_data_tbl %>%
     mutate(
         name = str_to_title(name)
     ) %>%
+    filter(date > "2021-11-20")  %>%
     ggplot(aes(x=date, y=value)) +
-    geom_col(aes(colour=name)) +
+    geom_line(aes(colour=name)) +
     facet_wrap(vars(name), scales = "free_y", ncol = 1) +
     geom_vline(xintercept = as.numeric(as.Date("2021-11-20")), linetype=4) +
     theme_clean() +
